@@ -18,42 +18,6 @@ int SetupSDCard(void)
 	
 	Serial.print("\nInitializing SD card...");
 
-#if 0
-	if(!SD.begin(SDCARD_NSS))
-	{
-		Serial.println("Card Startup Failed");
-		return(1);
-	}
-	
-	uint8_t cardType=SD.cardType();
-	if(cardType==CARD_NONE)
-	{
-		Serial.println("No SD card attached");
-		return(1);
-	}
-	
-	Serial.print("SD Card Type: ");
-	if(cardType==CARD_MMC)
-	{
-		Serial.println("MMC");
-	}
-	else if(cardType==CARD_SD)
-	{
-		Serial.println("SDSC");
-	}
-	else if(cardType==CARD_SDHC)
-	{
-		Serial.println("SDHC");
-	}
-	else
-	{
-		Serial.println("UNKNOWN");
-	}
-	
-	uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-	Serial.printf("SD Card Size: %lluMB\r\n\n", cardSize);
-#else
-
 	// we'll use the initialization code from the utility libraries
 	// since we're just testing if the card is working!
   
@@ -90,6 +54,11 @@ int SetupSDCard(void)
 		while (1);
 	}
 
+	return(0);
+}
+
+void PollSDCard(uint32_t now)
+{
 	Serial.print("Clusters:          ");		Serial.println(volume.clusterCount());
 	Serial.print("Blocks x Cluster:  ");		Serial.println(volume.blocksPerCluster());
 
@@ -108,18 +77,11 @@ int SetupSDCard(void)
 	Serial.print("Volume size (Gb):  ");		Serial.println((float)volumesize/1024.0/1024.0);
 
 	Serial.println("\nFiles found on the card (name, date and size in bytes): ");
-	root.openRoot(volume);
-
-	// list all files in the card with date and size
-	root.ls(LS_R | LS_DATE | LS_SIZE);
 	
-#endif
 
-	return(0);
-}
 
-void PollSDCard(uint32_t now)
-{
 
+
+	delay(5000);
 }
 
