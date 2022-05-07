@@ -1,6 +1,8 @@
 # XiaoLogger
 Simple gps, accelerometer and pressure sensor logger onto an SD Card using a Seeediuno Xiao as the controller
 
+![Alt text](XiaoLogger.jpg?raw=true "Logger in 3d printed housing")
+
 # Operation
 The logger just needs power and will start appending data to LOGGER.TXT in
 the root directory of the SD card.  In order to shut it down without
