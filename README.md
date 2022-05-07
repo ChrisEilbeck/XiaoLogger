@@ -35,18 +35,23 @@ My hardware runs from either the 5v port on the Seeeuino Xiao or I have a
 # Shopping list
 My hardware is built up from what I had stashed.
 
-The main controller is a Seeeduino Xiao
-[Seeeduino Xiao](https://shop.pimoroni.com/products/seeeduino-xiao?variant=32170131816531)
+The main controller is a [Seeeduino Xiao](https://shop.pimoroni.com/products/seeeduino-xiao?variant=32170131816531)
 
-The sensors I'm using are breakout boards for a BME280 barometric pressure sensor, an ADXL345 3-axis accelerometer, a NEO-6M gps receiver and a micro SD card.
+The sensors I'm using are breakout boards for a BME280 barometric pressure
+sensor, an ADXL345 3-axis accelerometer, a NEO-6M gps receiver and a micro
+SD card.  The micro SD breakout on mine has its voltage regulator removed
+but you can just hook it up to the 5v instead if you like.  I have a small
+OLED display and a couple of push buttons to control it.  I just used some
+cheap PCB momentary switches.
+
 [BME280 pressure sensor](https://smile.amazon.co.uk/Youmile-Digital-Barometric-Pressure-Temperature/dp/B0965843T6)
+
 [ADXL345 accelerometer](https://smile.amazon.co.uk/XTVTX-ADXL345-Digital-Acceleration-Gravity/dp/B09NRFDH5J)
+
 [NEO-6M gps](https://smile.amazon.co.uk/dp/B088LR3488)
 
-The micro SD breakout on mine has its voltage regulator removed but you can just hook it up to the 5v instead if you like.
 [Micro SD breakout](https://smile.amazon.co.uk/Youmile-Storage-Expansion-Interface-Raspberry/dp/B07XLM23X2)
 
-I have a small OLED display and a couple of push buttons to control it.  I just used some cheap PCB momentary switches.
 [OLED display](https://smile.amazon.co.uk/MakerHawk-Display-Module-SSD1306-Arduino/dp/B07BDFXFRK)
 
 Construction is pretty much everything mounted on the back of the back of
