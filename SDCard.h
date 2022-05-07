@@ -14,6 +14,10 @@
 	#define SDCARD_MOSI 10
 	
 	int SetupSDCard(void);
+
+	void PollSDCard(uint32_t now);
+	
+	void SDCardLogMessage(const char *logmessage);
 	
 #endif
 

@@ -16,8 +16,9 @@ int SetupSDCard(void)
 	// not usig the standard SPI SS pin, which we're not.
 //	pinMode(SDCARD_NSS,OUTPUT);
 	
+#if 0
 	Serial.print("\nInitializing SD card...");
-
+	
 	// we'll use the initialization code from the utility libraries
 	// since we're just testing if the card is working!
   
@@ -53,12 +54,24 @@ int SetupSDCard(void)
 		Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
 		while (1);
 	}
-
+#else
+	Serial.print("Initializing SD card...");
+	
+	if(!SD.begin(SDCARD_NSS))
+	{
+		Serial.println("initialization failed, hanging!");
+		while(1);
+	}
+  
+	Serial.println("initialization done.");
+#endif
+	
 	return(0);
 }
 
 void PollSDCard(uint32_t now)
 {
+#if 0
 	Serial.print("Clusters:          ");		Serial.println(volume.clusterCount());
 	Serial.print("Blocks x Cluster:  ");		Serial.println(volume.blocksPerCluster());
 
@@ -83,5 +96,29 @@ void PollSDCard(uint32_t now)
 
 
 	delay(5000);
+#endif
+}
+
+void SDCardLogMessage(const char *logmessage)
+{
+#if DEBUGTOSERIAL
+	Serial.print(logmessage);
+#endif
+
+	File myFile;
+
+	myFile=SD.open("logger.txt",FILE_WRITE);
+
+	// if the file opened okay, write to it:
+	if(myFile)
+	{
+    	myFile.print(logmessage);
+    	myFile.close();
+    }
+    else
+    {
+    	// if the file didn't open, print an error:
+    	Serial.println("error opening logger.txt");
+    }
 }
 

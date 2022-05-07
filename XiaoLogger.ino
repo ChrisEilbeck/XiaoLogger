@@ -36,6 +36,11 @@
 
 #define SEALEVELPRESSURE_HPA (1012.0)
 
+#define BUTTON0 0
+#define BUTTON1 1
+
+#define BEEPER 2
+
 #include <Wire.h>
 #include <SPI.h>
 
@@ -76,6 +81,20 @@ Adafruit_ADXL345_Unified accel=Adafruit_ADXL345_Unified(12345);
 #include <Adafruit_BME280.h>
 
 Adafruit_BME280 bme; // I2C
+
+
+
+
+bool normaloperation=true;
+
+
+
+
+
+
+
+
+
 
 
 
@@ -146,21 +165,109 @@ void displayRange(void)
 	Serial.println(" g");	
 }
 
+
+
+
+
 void SetupButtons(void)
 {
+	pinMode(BUTTON0,INPUT_PULLUP);
+	pinMode(BUTTON1,INPUT_PULLUP);
 }
+
+enum BUTTON_EVENTS
+{
+	no_event=0,
+	pressed,
+	released,
+	long_pressed
+};
+
+uint8_t button0event=no_event;
+uint8_t button1event=no_event;
+
+#define LONG_PRESS_TIME 2000
 
 void PollButtons(uint32_t now)
 {
 	static uint32_t poll_timer=20;	// ms
 	static uint32_t last_poll=0;
 	
+	static bool button0=true;
+	static bool button1=true;
+	
+	static uint32_t button0timer=0;
+	static uint32_t button1timer=0;
+	
 	if(now>(last_poll+poll_timer))
 	{
+		bool newbutton0=digitalRead(BUTTON0);
+		bool newbutton1=digitalRead(BUTTON1);
 		
+		if(newbutton0&&button0)
+		{
+			// button still up
+			button0event=no_event;
+			
+//			Serial.println("Button0 released");
+		}
+		else if(!newbutton0&&button0)
+		{
+			// button pressed
+			button0timer=0;
+			button0event=pressed;
+			
+			Serial.println("Button0 pressed");
+		}
+		else if(!newbutton0&!button0)
+		{
+			// button still pressed
+			button0timer+=poll_timer;
+			
+//			Serial.println("Button0 held");
+		}
+		else
+		{
+			Serial.print("Button held for ");
+			Serial.print(button0timer);
+			Serial.println(" ms");
+			
+			// button released
+			if(button0timer>=LONG_PRESS_TIME)
+				button0event=long_pressed;
+			else
+				button0event=released;
+			
+			Serial.println("Button0 released");
+		}
 		
+		if(newbutton1&&button1)
+		{
+			// button still up
+			button1event=no_event;
+		}
+		else if(!newbutton1&&button1)
+		{
+			// button pressed
+			button1timer=0;
+			button1event=pressed;
+		}
+		else if(!newbutton1&!button1)
+		{
+			// button still pressed
+			button1timer+=poll_timer;
+		}
+		else
+		{
+			// button released
+			if(button1timer>=LONG_PRESS_TIME)
+				button1event=long_pressed;
+			else
+				button1event=released;
+		}
 		
-		
+		button0=newbutton0;
+		button1=newbutton1;
 		
 		last_poll=now;
 	}	
@@ -227,10 +334,16 @@ void PollAccelerometer(uint32_t now)
 		sensors_event_t event; 
 		accel.getEvent(&event);
 		
+#if 0
 		/* Display the results (acceleration is measured in m/s^2) */
 		Serial.print("X: "); Serial.print(event.acceleration.x); Serial.print(", ");
 		Serial.print("Y: "); Serial.print(event.acceleration.y); Serial.print(", ");
 		Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print(" ");		Serial.println("m/s^2 ");
+#else
+		char buffer[80];
+		sprintf(buffer,"$ACXYZ,%f,%f,%f\r\n",event.acceleration.x,event.acceleration.y,event.acceleration.z);
+		SDCardLogMessage(buffer);
+#endif
 		
 		last_poll=now;
 	}	
@@ -270,6 +383,9 @@ void SetupPressureSensor(void)
 //	bme_temp->printSensorDetails();
 }
 
+double curalt_baro=-1000.0;
+double maxalt_baro=-1000.0;
+
 void PollPressureSensor(uint32_t now)
 {
 	static uint32_t poll_timer=1000;	// ms
@@ -278,30 +394,22 @@ void PollPressureSensor(uint32_t now)
 	if(now>(last_poll+poll_timer))
 	{
 #if 0
-		Serial.print("Temperature = ");
-		Serial.print(bme.readTemperature());
-		Serial.println(" °C");
-
-		Serial.print("Pressure = ");
-		Serial.print(bme.readPressure() / 100.0F);
-		Serial.println(" hPa");
-
-		Serial.print("Approx. Altitude = ");
-		Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-		Serial.println(" m");
-
-		Serial.print("Humidity = ");
-		Serial.print(bme.readHumidity());
-		Serial.println(" %");
-#else
 		Serial.print("T: ");	Serial.print(bme.readTemperature());					Serial.print(" C, ");
 		Serial.print("P: ");	Serial.print(bme.readPressure());						Serial.print(" hPa, ");
 		Serial.print("A: ");	Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));	Serial.print(" m, ");
 		Serial.print("H: ");	Serial.print(bme.readHumidity());						Serial.println(" %");
 
+		Serial.println();		
+#else
+		char buffer[80];
+		sprintf(buffer,"$PTPAH,%f,%f,%f,%f\r\n",bme.readTemperature(),bme.readPressure(),bme.readAltitude(SEALEVELPRESSURE_HPA),bme.readHumidity());
+		SDCardLogMessage(buffer);		
 #endif
 
-		Serial.println();
+		curalt_baro=bme.readAltitude(SEALEVELPRESSURE_HPA);
+		
+		if(maxalt_baro<curalt_baro)
+			maxalt_baro=curalt_baro;
 		
 		last_poll=now;
 	}	
@@ -330,6 +438,8 @@ void SetupGps(void)
 
 
 }
+
+double maxalt_gps=-1000.0;
 
 void PollGps(uint32_t now)
 {
@@ -366,22 +476,17 @@ void PollGps(uint32_t now)
 		{
 			if(strstr(linebuffer,"GPGLL")!=NULL)
 			{
+				if(maxalt_gps<gps.altitude.meters())
+					maxalt_gps=gps.altitude.meters();
+				
 			}
+			
+			SDCardLogMessage(linebuffer);
 			
 			lineptr=0;
 			memset(linebuffer,0,sizeof(linebuffer));
 		}
-		
-	}	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	}
 #endif
 }
 
@@ -408,46 +513,136 @@ void SetupOLEDDisplay()
 	// Show initial display buffer contents on the screen --
 	// the library initializes this with an Adafruit splash screen.
 	display.display();
-	delay(2000); // Pause for 2 seconds
+	delay(1000); // Pause for 2 seconds
 }
 
 void PollOLEDDisplay(uint32_t now)
 {
-	static uint32_t poll_timer=20;	// ms
+	static uint32_t poll_timer=1000;	// ms
 	static uint32_t last_poll=0;
+	static uint16_t screencount=0;
 	
 	if(now>(last_poll+poll_timer))
 	{
-		display.clearDisplay();
-
-		display.setTextSize(1);             // Normal 1:1 pixel scale
-		display.setTextColor(SSD1306_WHITE);        // Draw white text
-
-		float flat;
-		float flon;
-		unsigned long age;
+		if(normaloperation)
+		{
+			display.clearDisplay();
+			display.setTextSize(1);					// Normal 1:1 pixel scale
+			display.setTextColor(SSD1306_WHITE);	// Draw white text
+			display.setCursor(0,0);
+			
+			char buffer[32];
+			sprintf(buffer,"%04d/%02d/%02d %02d:%02d:%02d\r\n",gps.date.year(),gps.date.month(),gps.date.day(),gps.time.hour(),gps.time.minute(),gps.time.second());
+			display.print(buffer);
+			
+			switch(screencount&0x0f)
+			{
+				case 0 ... 5:	display.setTextSize(1);
+								display.println();
+								display.print("Lat: ");
+								display.println(gps.location.lat(),6);
+								display.print("Lon: ");
+								display.println(gps.location.lng(),6);		
+								
+								break;
 				
-		display.setCursor(0,0);             // Start at top-left corner
-
-		display.print("Lat: ");
-		display.println(gps.location.lat(),6);
-
-		display.print("Lon: ");
-		display.println(gps.location.lng(),6);		
-		
-		display.print("Alt: ");
-		display.println(gps.altitude.meters());
-
-		display.print("Numsats: ");
-		display.println(gps.satellites.value());
-		
-		display.display();
+				case 6 ... 7:	display.println();
+								display.print("# Sats: ");
+								display.println(gps.satellites.value());
+								
+								break;
+				
+				case 8 ... 9:	display.println();
+								display.print("Alt(GPS):\r\n  ");
+								display.print(gps.altitude.meters());
+								display.println(" m");
+				
+								break;
+								
+				case 10 ... 11:	display.println();
+								display.print("Max(GPS):\r\n  ");
+								display.print(maxalt_gps);
+								display.println(" m");
+								
+								break;
+				
+				case 12 ... 13:	display.println();
+								display.print("Alt(Baro):\r\n  ");
+								display.print(curalt_baro);
+								display.println(" m");
+								
+								break;
+				
+				case 14 ... 15:	display.println();
+								display.print("Max(Baro):\r\n  ");
+								display.print(maxalt_baro);
+								display.println(" m");
+								
+								break;
+				
+				default:		// do nothing
+								break;
+			}
+			
+			display.setTextSize(3);
+			display.setCursor(88,10);
+			if(gps.satellites.value()<3)		display.println("NF");
+			else if(gps.satellites.value()==3)	display.println("2D");
+			else								display.println("3D");
+			
+			display.display();
+			
+			screencount++;
+		}
 		
 		last_poll=now;
 	}
 }
 
-
+void PollCommandInterface(uint32_t now)
+{
+	if(button0event!=no_event)
+	{
+		Serial.print("\tButton0 Event ");
+		Serial.println(button0event);
+	
+		if(button0event==long_pressed)
+		{
+			display.clearDisplay();
+			display.setTextSize(2);
+			display.setTextColor(SSD1306_WHITE);
+			display.setCursor(0,0);
+			display.println("Stopping\r\nOperation\r\n");
+			
+			display.display();
+			
+			normaloperation=false;
+		}	
+			
+		button0event=no_event;
+	}
+	
+	if(button1event!=no_event)
+	{
+		Serial.print("\tButton1 Event ");
+		Serial.println(button1event);
+	
+		if(button1event==long_pressed)
+		{
+			display.clearDisplay();
+			display.setTextSize(2);
+			display.setTextColor(SSD1306_WHITE);
+			display.setCursor(0,0);
+			display.println("Starting\r\nOperation\r\n");
+			
+			display.display();
+			
+			normaloperation=true;
+		}	
+			
+		button1event=no_event;
+	}
+}
 
 
 
@@ -468,9 +663,9 @@ void setup(void)
 	while ( !Serial ) delay(100);	 // wait for native usb
 #endif
 	
-//	SetupSDCard();
+	SetupSDCard();
 //	SetupBeeper();
-//	SetupButtons();
+	SetupButtons();
 	SetupOLEDDisplay();
 	SetupAccelerometer();
 	SetupPressureSensor();
@@ -483,10 +678,11 @@ void loop(void)
 	
 //	PollSDCard(now);
 //	PollBeeper(now);
-//	PollButtons(now);
+	PollButtons(now);
 	PollOLEDDisplay(now);
 	PollAccelerometer(now);
 	PollPressureSensor(now);
 	PollGps(now);
+	PollCommandInterface(now);	
 }
 
