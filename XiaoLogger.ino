@@ -186,7 +186,7 @@ enum BUTTON_EVENTS
 uint8_t button0event=no_event;
 uint8_t button1event=no_event;
 
-#define LONG_PRESS_TIME 2000
+#define LONG_PRESS_TIME 1000
 
 void PollButtons(uint32_t now)
 {
