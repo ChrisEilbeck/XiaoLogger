@@ -1,8 +1,7 @@
 
-/*
 #define DEBUG 1
 
-#define SEALEVELPRESSURE_HPA (1012.0)
+#define SEALEVELPRESSURE_HPA 1013.0f
 
 #define BUTTON0 0
 #define BUTTON1 1
@@ -41,10 +40,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH,SCREEN_HEIGHT,&Wire,OLED_RESET);
 /* Assign a unique ID to this sensor at the same time */
 Adafruit_ADXL345_Unified accel=Adafruit_ADXL345_Unified(12345);
 
-//Adafruit_BMP280 bmp;
-//Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor();
-//Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
-
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
@@ -55,11 +50,12 @@ Adafruit_BME280 bme; // I2C
 
 bool normaloperation=true;
 
+// controls the amount of logging that goes to the serial console
 
+int verbose=1;;
 
-
-
-
+#include "Gps.h"
+#include "SDCard.h"
 
 
 
@@ -383,189 +379,11 @@ void PollPressureSensor(uint32_t now)
 	}	
 }
 
-#include <TinyGPS++.h>
-
-TinyGPSPlus gps;
-
-char linebuffer[80];
-int lineptr=0;
 
 
 
 
 
-
-
-
-void SetupGps(void)
-{
-	Serial1.begin(9600);
-	
-
-
-
-
-}
-
-double maxalt_gps=-1000.0;
-
-void PollGps(uint32_t now)
-{
-//	Serial.print("\x1b[2J");
-
-#if 0
-	char linebuffer[80];
-	int lineptr=0;
-#endif	
-#if 0
-	if (Serial.available()) 
-	{ 
-		// If anything comes in Serial (USB),
-		Serial1.write(Serial.read());	 // read it and send it out Serial1 (pins 0 & 1)
-	}
-
-	if (Serial1.available()) 
-	{
-		// If anything comes in Serial1 (pins 0 & 1)
-		Serial.write(Serial1.read());	 // read it and send it out Serial (USB)
-	}
-#else
-	while(Serial1.available())
-	{
-		char rxbyte=Serial1.read();
-		
-//		Serial.write('.');
-		
-		gps.encode(rxbyte);
-		
-		linebuffer[lineptr++]=rxbyte;
-		
-		if(linebuffer[lineptr-1]=='\n')
-		{
-			if(strstr(linebuffer,"GPGLL")!=NULL)
-			{
-				if(maxalt_gps<gps.altitude.meters())
-					maxalt_gps=gps.altitude.meters();
-				
-			}
-			
-			SDCardLogMessage(linebuffer);
-			
-			lineptr=0;
-			memset(linebuffer,0,sizeof(linebuffer));
-		}
-	}
-#endif
-}
-
-
-
-
-
-
-
-
-
-
-void SetupOLEDDisplay()
-{
-	// SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
-	if(!display.begin(SSD1306_SWITCHCAPVCC,SCREEN_ADDRESS))
-	{
-		Serial.println(F("SSD1306 display allocation failed, hanging ..."));
-		
-		// hang forever
-		while(1);
-	}
-
-	// Show initial display buffer contents on the screen --
-	// the library initializes this with an Adafruit splash screen.
-	display.display();
-	delay(1000); // Pause for 2 seconds
-}
-
-void PollOLEDDisplay(uint32_t now)
-{
-	static uint32_t poll_timer=1000;	// ms
-	static uint32_t last_poll=0;
-	static uint16_t screencount=0;
-	
-	if(now>(last_poll+poll_timer))
-	{
-		if(normaloperation)
-		{
-			display.clearDisplay();
-			display.setTextSize(1);					// Normal 1:1 pixel scale
-			display.setTextColor(SSD1306_WHITE);	// Draw white text
-			display.setCursor(0,0);
-			
-			char buffer[32];
-			sprintf(buffer,"%04d/%02d/%02d %02d:%02d:%02d\r\n",gps.date.year(),gps.date.month(),gps.date.day(),gps.time.hour(),gps.time.minute(),gps.time.second());
-			display.print(buffer);
-			
-			switch(screencount&0x0f)
-			{
-				case 0 ... 5:	display.setTextSize(1);
-								display.println();
-								display.print("Lat: ");
-								display.println(gps.location.lat(),6);
-								display.print("Lon: ");
-								display.println(gps.location.lng(),6);		
-								
-								break;
-				
-				case 6 ... 7:	display.println();
-								display.print("# Sats: ");
-								display.println(gps.satellites.value());
-								
-								break;
-				
-				case 8 ... 9:	display.println();
-								display.print("Alt(GPS):\r\n  ");
-								display.print(gps.altitude.meters());
-								display.println(" m");
-				
-								break;
-								
-				case 10 ... 11:	display.println();
-								display.print("Max(GPS):\r\n  ");
-								display.print(maxalt_gps);
-								display.println(" m");
-								
-								break;
-				
-				case 12 ... 13:	display.println();
-								display.print("Alt(Baro):\r\n  ");
-								display.print(curalt_baro);
-								display.println(" m");
-								
-								break;
-				
-				case 14 ... 15:	display.println();
-								display.print("Max(Baro):\r\n  ");
-								display.print(maxalt_baro);
-								display.println(" m");
-								
-								break;
-				
-				default:		// do nothing
-								break;
-			}
-			
-			display.setTextSize(3);
-			display.setCursor(88,10);
-			if(gps.satellites.value()<3)		display.println("NF");
-			else if(gps.satellites.value()==3)	display.println("2D");
-			else								display.println("3D");
-			
-			display.display();
-			
-			screencount++;
-		}
-		
-		last_poll=now;
-	}
-}
 
 void PollCommandInterface(uint32_t now)
 {
@@ -612,27 +430,88 @@ void PollCommandInterface(uint32_t now)
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-void setup(void) 
+void SetupSerial(void)
 {
 	Serial.begin(115200);
 	
 #if 0
 	while ( !Serial ) delay(100);	 // wait for native usb
 #endif
-	
+}
+
+char CmdBuffer[80];
+int CmdBufferPtr=0;
+
+void PollSerial(uint32_t now)
+{
+	if(Serial.available())
+	{
+		char rxbyte=Serial.read();
+		CmdBuffer[CmdBufferPtr++]=rxbyte;
+		
+		Serial.write(rxbyte);
+		
+		if(rxbyte==0x0d)
+		{
+#if 0
+			Serial.print("Command complete - ");
+			Serial.print(CmdBuffer);
+			Serial.print("\r\n");
+#endif		
+			if(CmdBufferPtr==1)
+			{
+				// empty command, ignore
+				
+				Serial.print("...\r\n");
+			}
+			else if(CmdBufferPtr==2)
+			{
+				// process single character commands
+			}
+			else
+			{
+				// process multi character commands
+				
+				if(strncmp(CmdBuffer,"ls",2)==0)
+				{
+					// List all the files on the sd card
+					Serial.print("Listing files ...\r\n");
+				}
+				else if(strncmp(CmdBuffer,"cat",3)==0)
+				{
+					// read a file from the sd card
+					Serial.print("Cataloguing a file ...\r\n");
+				}
+				else if(strncmp(CmdBuffer,"rm",2)==0)
+				{
+					// delete a file from the sd card
+					Serial.print("Deleting a file ...\r\n");
+				}
+				else if(strncmp(CmdBuffer,"start",5)==0)	{	Serial.print("Starting logging ...\r\n");				sdcard_enable=true;		}
+				else if(strncmp(CmdBuffer,"stop",4)==0)		{	Serial.print("Stopping logging ...\r\n");				sdcard_enable=false;	}
+				else if(strncmp(CmdBuffer,"detailed",8)==0)	{	Serial.print("Setting detailed output to serial\r\n");	verbose=2;				}
+				else if(strncmp(CmdBuffer,"verbose",7)==0)	{	Serial.print("Setting verbose output to serial\r\n");	verbose=1;				}
+				else if(strncmp(CmdBuffer,"terse",5)==0)	{	Serial.print("Setting terse output to serial\r\n");		verbose=0;				}
+				else
+				{
+					Serial.print("Duff command, ignoring ...\r\n");
+				}
+			}
+			
+			CmdBufferPtr=0;
+		}
+	}
+}
+
+void setup(void) 
+{
+	SetupSerial();
 	SetupSDCard();
-//	SetupBeeper();
+
+#if 0
+	SetupBeeper();
+#endif
+
 	SetupButtons();
 	SetupOLEDDisplay();
 	SetupAccelerometer();
@@ -644,13 +523,31 @@ void loop(void)
 {
 	uint32_t now=millis();
 	
-//	PollSDCard(now);
-//	PollBeeper(now);
-	PollButtons(now);
-	PollOLEDDisplay(now);
+	// poll the sensors.  these are higher priority than the other attached
+	// devices so having them measured with the minimal delay from the
+	// timestamp value is a good thing
 	PollAccelerometer(now);
 	PollPressureSensor(now);
+
+#if 0
+	// this is probably redundant
+	PollSDCard(now);
+#endif
+#if 0
+	// this is not fitted in the current version of the hardware
+	PollBeeper(now);
+#endif
+
+	PollButtons(now);
+	PollOLEDDisplay(now);
+	
+	// respond to data received from the GPS
 	PollGps(now);
+	
+	// respond to commands over the serial console link
+	PollSerial(now);
+	
+	// respond to events generated using the buttons
 	PollCommandInterface(now);	
 }
 

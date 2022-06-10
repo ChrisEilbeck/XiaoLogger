@@ -1,6 +1,8 @@
 
 #include "SDCard.h"
 
+//#define LOG_TO_A_NEW_FILE_EACH_TIME 1
+
 // set up variables using the SD utility library functions:
 Sd2Card card;
 SdVolume volume;
@@ -107,8 +109,18 @@ void SDCardLogMessage(const char *logmessage)
 
 	File myFile;
 
+	
+#if LOG_TO_A_NEW_FILE_EACH_TIME
+	char filename[80];
+	
+	
+	
+	
+	
+#else
 	myFile=SD.open("logger.txt",FILE_WRITE);
-
+#endif
+	
 	// if the file opened okay, write to it:
 	if(myFile)
 	{
