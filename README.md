@@ -50,6 +50,9 @@ cheap PCB momentary switches.
 
 [NEO-6M gps](https://smile.amazon.co.uk/dp/B088LR3488)
 
+It should be noted that this appears to be a fake u-Blox receiver as it
+won't accept some UBX commands
+
 [Micro SD breakout](https://smile.amazon.co.uk/Youmile-Storage-Expansion-Interface-Raspberry/dp/B07XLM23X2)
 
 [OLED display](https://smile.amazon.co.uk/MakerHawk-Display-Module-SSD1306-Arduino/dp/B07BDFXFRK)
