@@ -108,29 +108,26 @@ void SDCardLogMessage(const char *logmessage)
 #endif
 
 	File myFile;
-
 	
-#if LOG_TO_A_NEW_FILE_EACH_TIME
-	char filename[80];
-	
-	
-	
-	
-	
-#else
-	myFile=SD.open("logger.txt",FILE_WRITE);
-#endif
-	
-	// if the file opened okay, write to it:
-	if(myFile)
+	if(sdcard_enable)
 	{
-    	myFile.print(logmessage);
-    	myFile.close();
-    }
-    else
-    {
-    	// if the file didn't open, print an error:
-    	Serial.println("error opening logger.txt");
-    }
+#if LOG_TO_A_NEW_FILE_EACH_TIME
+		char filename[80];
+#else
+		myFile=SD.open("logger.txt",FILE_WRITE);
+#endif
+		
+		// if the file opened okay, write to it:
+		if(myFile)
+		{
+			myFile.print(logmessage);
+			myFile.close();
+		}
+		else
+		{
+			// if the file didn't open, print an error:
+			Serial.println("error opening logger.txt");
+		}
+	}
 }
 
