@@ -6,7 +6,7 @@ const char *inifilename = "/config.ini";
 
 // from the GPS section of the config file
 
-char GpsType[16]="Generic";
+char GPSType[16]="Generic";
 int InitialBaudRate=9600;
 bool SyncTimeToGPS=true;
 bool DoBaudRateChange=true;
@@ -90,26 +90,36 @@ void ReadIniFile(void)
 	
 	Serial.println("Reading Ini file /config.ini");
 	
-	if(ini.getValue("Pressure","SyncSamplingToGPS",buffer,bufferLen))
-	{
-		Serial.print("SyncSamplingToGPS = ");
-		Serial.println(atoi(buffer));
-		if(atoi(buffer))	SyncSamplingToGPS=true;
-		else				SyncSamplingToGPS=false;
-	}
-	else
-		printErrorMessage(ini.getError());
+	// GPS variables
 	
+	ini.getValue("GPS","Type",buffer,bufferLen,GPSType,sizeof(GPSType));
+	ini.getValue("GPS","InitialBaudRate",buffer,bufferLen,InitialBaudRate);
+	ini.getValue("GPS","SyncTimeToGPS",buffer,bufferLen,SyncTimeToGPS);
+	ini.getValue("GPS","DoBaudRateChange",buffer,bufferLen,DoBaudRateChange);
+	ini.getValue("GPS","BaudRate",buffer,bufferLen,BaudRate);
+	ini.getValue("GPS","DoHighFixRate",buffer,bufferLen,DoHighFixRate);
+	ini.getValue("GPS","ChangeBaudRateCommand",buffer,bufferLen,ChangeBaudRateCommand,sizeof(ChangeBaudRateCommand));
+	ini.getValue("GPS","HighFixRateCommand",buffer,bufferLen,HighFixRateCommand,sizeof(HighFixRateCommand));
 	
-	
-	
-	
-	
-	
-	
-	
-	
+	// Accelerometer variables
 
+	ini.getValue("Accelerometer","Type",buffer,bufferLen,AccelType,sizeof(AccelType));
+	ini.getValue("Accelerometer","MeasurementRate",buffer,bufferLen,AccelMeasurementRate);
+	
+	// Gyro variables
+	
+	ini.getValue("Gyro","Type",buffer,bufferLen,GyroType,sizeof(GyroType));
+	ini.getValue("Gyro","MeasurementRate",buffer,bufferLen,GyroMeasurementRate);
+	
+	// Pressure sensor variables
+	
+	ini.getValue("Pressure","Type",buffer,bufferLen,PressureType,sizeof(PressureType));
+	ini.getValue("Pressure","MeasurementRate",buffer,bufferLen,PressureMeasurementRate);
+	ini.getValue("Pressure","SyncSamplingToGPS",buffer,bufferLen,SyncSamplingToGPS);
+	
+	// Logging variables
+	
+	ini.getValue("Logging","UseUniqueFilenames",buffer,bufferLen,UseUniqueFilenames);
 }
 
 
