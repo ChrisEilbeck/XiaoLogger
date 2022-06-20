@@ -88,6 +88,17 @@ void ReadIniFile(void)
 		return;
 	}
 	
+	Serial.println("Reading Ini file /config.ini");
+	
+	if(ini.getValue("Pressure","SyncSamplingToGPS",buffer,bufferLen))
+	{
+		Serial.print("SyncSamplingToGPS = ");
+		Serial.println(atoi(buffer));
+		if(atoi(buffer))	SyncSamplingToGPS=true;
+		else				SyncSamplingToGPS=false;
+	}
+	else
+		printErrorMessage(ini.getError());
 	
 	
 	
@@ -116,6 +127,11 @@ void WriteIniFile(void)
 		opf.println("[GPS]");
 		opf.println("Type=Neo8m");
 		opf.println("InitialBaudRate=9600");
+		opf.println("");
+		
+		opf.println("[Pressure]");
+		opf.println("SyncSamplingToGPS=1");
+		opf.println("");
 		
 		opf.close();
 	}

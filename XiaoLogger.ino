@@ -207,12 +207,11 @@ void setup(void)
 	SetupSerial();
 	SetupSDCard();
 
-#if 0
+	SetupIniFile();
 	SetupBeeper();
-#endif
-
 	SetupButtons();
 	SetupOLEDDisplay();
+
 	SetupAccelerometer();
 	SetupPressureSensor();
 	SetupGps();
