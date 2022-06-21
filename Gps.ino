@@ -2,7 +2,11 @@
 #define FIX_RATE_5HZ 0
 #define BAUD_RATE_CHANGE 0
 
+#include <TimeLib.h>
+
 #include "Gps.h"
+#include "IniFile.h"
+#include "PressureSensor.h"
 
 TinyGPSPlus gps;
 
@@ -15,41 +19,6 @@ void SetupGps(void)
 {
 	Serial1.begin(9600);
 	
-#if BAUD_RATE_CHANGE
-	// this is straight out of u-center 8.27.  it changes the first interface port to
-	// use nmea and ubx at 115200 baud.
-//	uint8_t cmdbaud[]={	0xB5,0x62,0x06,0x00,0x14,0x00,0x01,0x00,0x00,0x00,0x10,0x00,0x00,0x00,0x00,0xC2,0x01,0x00,0x00,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0xF1,0xCE	};
-	
-	if(0)
-	{
-		// uart1 nmea+ubx in and out at 38400
-		uint8_t cmdbaud[]="$PUBX,41,1,3,3,38400,0*24\r\n";
-		Serial1.write(cmdbaud,sizeof(cmdbaud));
-	}
-		
-	if(0)
-	{
-		// uart1 nmea+ubx in and out at 115200
-		uint8_t cmdbaud[]="$PUBX,41,1,3,3,115200,0*1c\r\n";
-		Serial1.write(cmdbaud,sizeof(cmdbaud));
-	}
-	
-	if(0)
-	{
-		// uart2 nmea+ubx in and out at 115200
-		uint8_t cmdbaud[]={	0xB5,0x62,0x06,0x00,0x14,0x00,0x02,0x00,0x00,0x00,0x10,0x00,0x00,0x00,0x00,0xC2,0x01,0x00,0x03,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0xF5,0xFA	};
-		Serial1.write(cmdbaud,sizeof(cmdbaud));
-	}
-#endif
-#if FIX_RATE_5HZ
-	// this sets the fix rate to 5Hz
-	uint8_t cmdfixrate[]={	0xB5,0x62,0x06,0x08,0x06,0x00,0xC8,0x00,0x01,0x00,0x01,0x00,0xDE,0x6A	};
-	Serial1.write(cmdfixrate,sizeof(cmdfixrate));
-#else
-	// this sets the fix rate to `Hz
-	uint8_t cmdfixrate[]={	0xB5,0x62,0x06,0x08,0x06,0x00,0xE8,0x03,0x01,0x00,0x01,0x00,0x01,0x39 	};
-	Serial1.write(cmdfixrate,sizeof(cmdfixrate));
-#endif
 #if BAUD_RATE_CHANGE
 	// restart the serial port to run at a higher rate so we can process more 
 	// messages and a higher fix rate
@@ -87,11 +56,13 @@ void PollGps(uint32_t now)
 		
 		if(linebuffer[lineptr-1]=='\n')
 		{
-			if(strstr(linebuffer,"GPGLL")!=NULL)
+			// process a full line of NMEA from the GPS
+			
+			if(		(strncmp(linebuffer,"$GPGLL",6)==0)
+				||	(strncmp(linebuffer,"$GNGLL",6)==0)	)
 			{
 				if(maxalt_gps<gps.altitude.meters())
 					maxalt_gps=gps.altitude.meters();
-				
 			}
 			
 			SDCardLogMessage(linebuffer);
@@ -103,7 +74,21 @@ void PollGps(uint32_t now)
 			if(strncmp(linebuffer,"$GPGGA",6)==0)
 				Serial.print(linebuffer);
 #endif
-					
+			
+			if(		SyncTimeToGPS
+				&&	(strncmp(linebuffer,"$GPRMC",6)==0)	)
+			{
+				Serial.println("Setting time from the GPS");
+				setTime(gps.time.hour(),gps.time.minute(),gps.time.second(),gps.date.day(),gps.date.month(),gps.date.year());
+			}
+			
+			if(		PressureSyncSamplingToGPS
+				&&	(		(strncmp(linebuffer,"$GPGGA",6)==0)
+						||	(strncmp(linebuffer,"$GNGGA",6)==0)		)	)
+			{
+				BaroSampleNow=true;
+			}
+			
 			lineptr=0;
 			memset(linebuffer,0,sizeof(linebuffer));
 		}

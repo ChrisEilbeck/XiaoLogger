@@ -3,6 +3,8 @@
 
 Adafruit_BME280 bme;
 
+bool BaroSampleNow=false;
+
 void SetupPressureSensor(void)
 {
 	Serial.println(F("BME280 Sensor event test"));
@@ -45,28 +47,43 @@ void PollPressureSensor(uint32_t now)
 	static uint32_t poll_timer=1000;	// ms
 	static uint32_t last_poll=0;
 	
-	if(now>(last_poll+poll_timer))
+	if(PressureSyncSamplingToGPS)
 	{
-#if 0
-		Serial.print("T: ");	Serial.print(bme.readTemperature());					Serial.print(" C, ");
-		Serial.print("P: ");	Serial.print(bme.readPressure());						Serial.print(" hPa, ");
-		Serial.print("A: ");	Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));	Serial.print(" m, ");
-		Serial.print("H: ");	Serial.print(bme.readHumidity());						Serial.println(" %");
-
-		Serial.println();		
-#else
-		char buffer[80];
-		sprintf(buffer,"$PTPAH,%f,%f,%f,%f\r\n",bme.readTemperature(),bme.readPressure(),bme.readAltitude(SEALEVELPRESSURE_HPA),bme.readHumidity());
-		SDCardLogMessage(buffer);		
-#endif
-
-		curalt_baro=bme.readAltitude(SEALEVELPRESSURE_HPA);
+		if(BaroSampleNow)
+		{
+			char buffer[80];
+			sprintf(buffer,"$PTPAH,%f,%f,%f,%f\r\n",bme.readTemperature(),bme.readPressure(),bme.readAltitude(SEALEVELPRESSURE_HPA),bme.readHumidity());
+			SDCardLogMessage(buffer);		
 		
-		if(maxalt_baro<curalt_baro)
-			maxalt_baro=curalt_baro;
-		
-		last_poll=now;
+			curalt_baro=bme.readAltitude(SEALEVELPRESSURE_HPA);
+			BaroSampleNow=false;		
+		}
+	}
+	else
+	{	
+		if(now>(last_poll+poll_timer))
+		{
+	#if 0
+			Serial.print("T: ");	Serial.print(bme.readTemperature());					Serial.print(" C, ");
+			Serial.print("P: ");	Serial.print(bme.readPressure());						Serial.print(" hPa, ");
+			Serial.print("A: ");	Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));	Serial.print(" m, ");
+			Serial.print("H: ");	Serial.print(bme.readHumidity());						Serial.println(" %");
+
+			Serial.println();		
+	#else
+			char buffer[80];
+			sprintf(buffer,"$PTPAH,%f,%f,%f,%f\r\n",bme.readTemperature(),bme.readPressure(),bme.readAltitude(SEALEVELPRESSURE_HPA),bme.readHumidity());
+			SDCardLogMessage(buffer);		
+	#endif
+
+			curalt_baro=bme.readAltitude(SEALEVELPRESSURE_HPA);
+			last_poll=now;
+		}
 	}	
+
+			
+	if(maxalt_baro<curalt_baro)
+		maxalt_baro=curalt_baro;		
 }
 
 

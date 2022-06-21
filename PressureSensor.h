@@ -8,6 +8,8 @@
 extern double maxalt_baro;
 extern double curalt_baro;
 
+extern bool BaroSampleNow;
+
 void SetupPressureSensor(void);
 void PollPressureSensor(uint32_t now);
 

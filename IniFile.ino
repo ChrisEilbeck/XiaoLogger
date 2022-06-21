@@ -8,15 +8,13 @@ const char *inifilename = "/config.ini";
 
 char GPSType[16]="Generic";
 int InitialBaudRate=9600;
+int BaudRate=115200;
 bool SyncTimeToGPS=true;
 bool DoBaudRateChange=true;
-int BaudRate=115200;
 bool DoHighFixRate=true;
 int HighFixRate=10;
-bool DoOutputRawData=true;
 char ChangeBaudRateCommand[80];
 char HighFixRateCommand[80];
-char OutputRawDataCommand[80];
 
 // from the Accelerometer section of the config file
 char AccelType[16]="ADXL345";
@@ -29,10 +27,40 @@ int GyroMeasurementRate=5;
 // from the Pressure section of the config file
 char PressureType[16]="BME280";
 int PressureMeasurementRate=10;
-bool SyncSamplingToGPS=true;
+bool PressureSyncSamplingToGPS=true;
 
 // from the Logging section of the config file
 bool UseUniqueFilenames=true;
+
+void PrintConfigVariables(void)
+{
+	Serial.println("Config variables");
+	Serial.println("");
+	
+	Serial.print("GPSType:\t\t");				Serial.println(GPSType);
+	Serial.print("InitialBaudRate:\t");			Serial.println(InitialBaudRate);
+	Serial.print("BaudRate:\t\t");				Serial.println(BaudRate);
+	Serial.print("DoBaudRateChange:\t");		Serial.println(DoBaudRateChange?"True":"False");
+	Serial.print("DoHighFixRate:\t\t");			Serial.println(DoHighFixRate?"True":"False");
+	Serial.print("SyncTimeToGPS:\t\t");			Serial.println(SyncTimeToGPS?"True":"False");
+	Serial.println("");
+	Serial.print("ChangeBaudRateCommand:\t");	Serial.println(ChangeBaudRateCommand);
+	Serial.print("HighFixRateCommand:\t");		Serial.println(HighFixRateCommand);
+	Serial.println("");
+	
+	Serial.print("AccelType:\t\t");				Serial.println(AccelType);
+	Serial.print("MeasurementRate:\t");			Serial.println(AccelMeasurementRate);
+	Serial.println("");
+	
+	Serial.print("GyroType:\t\t");				Serial.println(GyroType);
+	Serial.print("MeasurementRate:\t");			Serial.println(GyroMeasurementRate);
+	Serial.println("");
+	
+	Serial.print("PressureType:\t\t");			Serial.println(PressureType);
+	Serial.print("MeasurementRate:\t");			Serial.println(PressureMeasurementRate);
+	Serial.print("SyncSamplingToGPS:\t");		Serial.println(PressureSyncSamplingToGPS?"True":"False");
+	Serial.println("");
+}
 
 void printErrorMessage(uint8_t e, bool eol = true)
 {
@@ -115,11 +143,13 @@ void ReadIniFile(void)
 	
 	ini.getValue("Pressure","Type",buffer,bufferLen,PressureType,sizeof(PressureType));
 	ini.getValue("Pressure","MeasurementRate",buffer,bufferLen,PressureMeasurementRate);
-	ini.getValue("Pressure","SyncSamplingToGPS",buffer,bufferLen,SyncSamplingToGPS);
+	ini.getValue("Pressure","SyncSamplingToGPS",buffer,bufferLen,PressureSyncSamplingToGPS);
 	
 	// Logging variables
 	
 	ini.getValue("Logging","UseUniqueFilenames",buffer,bufferLen,UseUniqueFilenames);
+
+	PrintConfigVariables();
 }
 
 
