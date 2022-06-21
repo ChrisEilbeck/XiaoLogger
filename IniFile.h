@@ -9,12 +9,13 @@ void PollIniFile(uint32_t now);
 extern char GpsType[16];
 extern int InitialBaudRate;
 extern bool SyncTimeToGPS;
-extern bool DoBaudRateChange;
+extern bool SetHighBaudRate;
+extern bool SetHighFixRate;
+extern bool SetKinematicsFilter;
 extern int BaudRate;
-extern bool DoHighFixRate;
-extern int HighFixRate;
-extern char ChangeBaudRateCommand[80];
+extern char HighBaudRateCommand[80];
 extern char HighFixRateCommand[80];
+extern char KinematicsFilterCommand[80];
 
 // from the Accelerometer section of the config file
 extern char AccelType[16];

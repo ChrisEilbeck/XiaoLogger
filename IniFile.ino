@@ -2,7 +2,7 @@
 #include <SD.h>
 #include <IniFile.h>
 
-const char *inifilename = "/config.ini";
+const char *inifilename="/config.ini";
 
 // from the GPS section of the config file
 
@@ -10,11 +10,13 @@ char GPSType[16]="Generic";
 int InitialBaudRate=9600;
 int BaudRate=115200;
 bool SyncTimeToGPS=true;
-bool DoBaudRateChange=true;
-bool DoHighFixRate=true;
+bool SetHighBaudRate=true;
+bool SetHighFixRate=true;
+bool SetKinematicsFilter=true;
 int HighFixRate=10;
-char ChangeBaudRateCommand[80];
+char HighBaudRateCommand[80];
 char HighFixRateCommand[80];
+char KinematicsFilterCommand[80];
 
 // from the Accelerometer section of the config file
 char AccelType[16]="ADXL345";
@@ -37,28 +39,30 @@ void PrintConfigVariables(void)
 	Serial.println("Config variables");
 	Serial.println("");
 	
-	Serial.print("GPSType:\t\t");				Serial.println(GPSType);
-	Serial.print("InitialBaudRate:\t");			Serial.println(InitialBaudRate);
-	Serial.print("BaudRate:\t\t");				Serial.println(BaudRate);
-	Serial.print("DoBaudRateChange:\t");		Serial.println(DoBaudRateChange?"True":"False");
-	Serial.print("DoHighFixRate:\t\t");			Serial.println(DoHighFixRate?"True":"False");
-	Serial.print("SyncTimeToGPS:\t\t");			Serial.println(SyncTimeToGPS?"True":"False");
+	Serial.print("GPSType:\t\t\t");				Serial.println(GPSType);
+	Serial.print("InitialBaudRate:\t\t");			Serial.println(InitialBaudRate);
+	Serial.print("BaudRate:\t\t\t");				Serial.println(BaudRate);
+	Serial.print("SyncTimeToGPS:\t\t\t");			Serial.println(SyncTimeToGPS?"True":"False");
+	Serial.print("SetHighBaudRate:\t\t");			Serial.println(SetHighBaudRate?"True":"False");
+	Serial.print("SetHighFixRate:\t\t\t");		Serial.println(SetHighFixRate?"True":"False");
+	Serial.print("SetKinematicsFilter:\t\t");		Serial.println(SetKinematicsFilter?"True":"False");
 	Serial.println("");
-	Serial.print("ChangeBaudRateCommand:\t");	Serial.println(ChangeBaudRateCommand);
-	Serial.print("HighFixRateCommand:\t");		Serial.println(HighFixRateCommand);
-	Serial.println("");
-	
-	Serial.print("AccelType:\t\t");				Serial.println(AccelType);
-	Serial.print("MeasurementRate:\t");			Serial.println(AccelMeasurementRate);
+	Serial.print("ChangeBaudRateCommand:\t\t");	Serial.println(HighBaudRateCommand);
+	Serial.print("HighFixRateCommand:\t\t");		Serial.println(HighFixRateCommand);
+	Serial.print("KinematicsFilterCommand:\t");	Serial.println(KinematicsFilterCommand);
 	Serial.println("");
 	
-	Serial.print("GyroType:\t\t");				Serial.println(GyroType);
-	Serial.print("MeasurementRate:\t");			Serial.println(GyroMeasurementRate);
+	Serial.print("AccelType:\t\t\t");				Serial.println(AccelType);
+	Serial.print("MeasurementRate:\t\t");			Serial.println(AccelMeasurementRate);
 	Serial.println("");
 	
-	Serial.print("PressureType:\t\t");			Serial.println(PressureType);
-	Serial.print("MeasurementRate:\t");			Serial.println(PressureMeasurementRate);
-	Serial.print("SyncSamplingToGPS:\t");		Serial.println(PressureSyncSamplingToGPS?"True":"False");
+	Serial.print("GyroType:\t\t\t");				Serial.println(GyroType);
+	Serial.print("MeasurementRate:\t\t");			Serial.println(GyroMeasurementRate);
+	Serial.println("");
+	
+	Serial.print("PressureType:\t\t\t");			Serial.println(PressureType);
+	Serial.print("MeasurementRate:\t\t");			Serial.println(PressureMeasurementRate);
+	Serial.print("SyncSamplingToGPS:\t\t");		Serial.println(PressureSyncSamplingToGPS?"True":"False");
 	Serial.println("");
 }
 
@@ -122,12 +126,14 @@ void ReadIniFile(void)
 	
 	ini.getValue("GPS","Type",buffer,bufferLen,GPSType,sizeof(GPSType));
 	ini.getValue("GPS","InitialBaudRate",buffer,bufferLen,InitialBaudRate);
-	ini.getValue("GPS","SyncTimeToGPS",buffer,bufferLen,SyncTimeToGPS);
-	ini.getValue("GPS","DoBaudRateChange",buffer,bufferLen,DoBaudRateChange);
 	ini.getValue("GPS","BaudRate",buffer,bufferLen,BaudRate);
-	ini.getValue("GPS","DoHighFixRate",buffer,bufferLen,DoHighFixRate);
-	ini.getValue("GPS","ChangeBaudRateCommand",buffer,bufferLen,ChangeBaudRateCommand,sizeof(ChangeBaudRateCommand));
+	ini.getValue("GPS","SyncTimeToGPS",buffer,bufferLen,SyncTimeToGPS);
+	ini.getValue("GPS","SetHighBaudRate",buffer,bufferLen,SetHighBaudRate);
+	ini.getValue("GPS","SetHighFixRate",buffer,bufferLen,SetHighFixRate);
+	ini.getValue("GPS","SetKinematicsFilter",buffer,bufferLen,SetKinematicsFilter);
+	ini.getValue("GPS","HighBaudRateCommand",buffer,bufferLen,HighBaudRateCommand,sizeof(HighBaudRateCommand));
 	ini.getValue("GPS","HighFixRateCommand",buffer,bufferLen,HighFixRateCommand,sizeof(HighFixRateCommand));
+	ini.getValue("GPS","KinematicsFilterCommand",buffer,bufferLen,KinematicsFilterCommand,sizeof(KinematicsFilterCommand));
 	
 	// Accelerometer variables
 
@@ -167,12 +173,30 @@ void WriteIniFile(void)
 		opf.println("[GPS]");
 		opf.println("Type=Neo8m");
 		opf.println("InitialBaudRate=9600");
+		opf.println("BaudRate=115200");
+		opf.println("SyncTimeToGPS=1");
+		opf.println("SetHighBaudRate=1");
+		opf.println("SetHighFixRate=1");
+		opf.println("HighBaudRateCommand=00000000");
+		opf.println("HighFixRateCommand=11111111");
+		opf.println("KinematicsFilterCommand=22222222");
 		opf.println("");
-		
+		opf.println("[Accelerometer]");
+		opf.println("Type=ADXL345");
+		opf.println("MeasurementRate=100");
+		opf.println("");
+		opf.println("[Gyro]");
+		opf.println("Type=None");
+		opf.println("MeasurementRate=100");
+		opf.println("");
 		opf.println("[Pressure]");
+		opf.println("Type=BME280");
+		opf.println("MeasurementRate=10");
 		opf.println("SyncSamplingToGPS=1");
 		opf.println("");
-		
+		opf.println("[Logging]");
+		opf.println("UseUniqueFilenames=1");
+				
 		opf.close();
 	}
 	else
