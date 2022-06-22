@@ -184,13 +184,14 @@ void PollSerial(uint32_t now)
 					// delete a file from the sd card
 					Serial.print("Deleting a file ...\r\n");
 				}
-				else if(strncmp(CmdBuffer,"writeini",8)==0)	{	WriteIniFile();																	}
-				else if(strncmp(CmdBuffer,"readini",7)==0)	{	ReadIniFile();																	}
-				else if(strncmp(CmdBuffer,"start",5)==0)	{	Serial.println("Starting logging ...");					sdcard_enable=true;		}
-				else if(strncmp(CmdBuffer,"stop",4)==0)		{	Serial.println("Stopping logging ...");					sdcard_enable=false;	}
-				else if(strncmp(CmdBuffer,"detailed",8)==0)	{	Serial.println("Setting detailed output to serial");	verbose=2;				}
-				else if(strncmp(CmdBuffer,"verbose",7)==0)	{	Serial.println("Setting verbose output to serial");		verbose=1;				}
-				else if(strncmp(CmdBuffer,"terse",5)==0)	{	Serial.println("Setting terse output to serial");		verbose=0;				}
+				else if(strncmp(CmdBuffer,"writeini",8)==0)	{	WriteIniFile();																		}
+				else if(strncmp(CmdBuffer,"readini",7)==0)	{	ReadIniFile();																		}
+				else if(strncmp(CmdBuffer,"start",5)==0)	{	Serial.println("Starting logging ...");					sdcard_enable=true;			}
+				else if(strncmp(CmdBuffer,"stop",4)==0)		{	Serial.println("Stopping logging ...");					sdcard_enable=false;		}
+				else if(strncmp(CmdBuffer,"status",6)==0)	{	Serial.print("Logging is ");	Serial.println(sdcard_enable?"Enabled":"Disabled");	}
+				else if(strncmp(CmdBuffer,"detailed",8)==0)	{	Serial.println("Setting detailed output to serial");	verbose=2;					}
+				else if(strncmp(CmdBuffer,"verbose",7)==0)	{	Serial.println("Setting verbose output to serial");		verbose=1;					}
+				else if(strncmp(CmdBuffer,"terse",5)==0)	{	Serial.println("Setting terse output to serial");		verbose=0;					}
 				else
 				{
 					Serial.print("Duff command, ignoring ...\r\n");
