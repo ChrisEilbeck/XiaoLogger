@@ -6,7 +6,7 @@ void PollIniFile(uint32_t now);
 
 // from the GPS section of the config file
 
-extern char GpsType[16];
+extern char GPSType[16];
 extern int InitialBaudRate;
 extern bool SyncTimeToGPS;
 extern bool SetHighBaudRate;

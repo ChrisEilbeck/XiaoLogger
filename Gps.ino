@@ -1,7 +1,4 @@
 
-#define FIX_RATE_5HZ 0
-#define BAUD_RATE_CHANGE 0
-
 #include <TimeLib.h>
 
 #include "Gps.h"
@@ -15,17 +12,67 @@ int lineptr=0;
 
 double maxalt_gps=-1000.0;
 
+int NibbleToValue(char nibble)
+{
+	if((nibble>='0')&&(nibble<='9'))		return(nibble-'0');
+	else if((nibble>='a')&&(nibble<'f'))	return(nibble-'a'+10);
+	else if((nibble>='A')&&(nibble<'F'))	return(nibble-'A'+10);
+	else									return(0);
+}
+
+void SendHexMessage(char *hexmsg)
+{
+	Serial.print("Sending ");	Serial.print(strlen(hexmsg)/2);		Serial.println(" bytes to the GPS");
+
+	char *binmsg=(char *)malloc(strlen(hexmsg)/2);
+
+	for(int cnt=0;cnt<(strlen(hexmsg)/2);cnt++)
+	{
+		binmsg[cnt]=NibbleToValue(hexmsg[cnt*2])*16+NibbleToValue(hexmsg[cnt*2+1]);
+
+		if(binmsg[cnt]<16)	Serial.print("0");
+		Serial.print(binmsg[cnt],HEX);
+	}
+	
+	Serial.println("");
+	
+	Serial1.write(binmsg,strlen(hexmsg)/2);
+	
+	free(binmsg);
+}
+
 void SetupGps(void)
 {
-	Serial1.begin(9600);
+	Serial1.begin(InitialBaudRate);
+
+#if 0	
+	if(strncmp(GPSType,"Neo8m",5)==0)
+	{
+		if(SetHighBaudRate)
+		{
+			// restart the serial port to run at a higher rate so we can process more 
+			// messages and a higher fix rate
+			
+			SendHexMessage(HighBaudRateCommand);
+			
+			Serial1.end();
+			delay(100);
+			Serial1.begin(BaudRate);
+		}	
+	}
+#endif
+#if 0
+	#if 0
+			SendHexMessage("B5620600140001000000D0080000004B000023000300000000006437");
+	#endif
+	#if 1
+			SendHexMessage("B5620600140001000000D0080000009600002300030000000000AF70");
+	#endif
 	
-#if BAUD_RATE_CHANGE
-	// restart the serial port to run at a higher rate so we can process more 
-	// messages and a higher fix rate
-	Serial1.end();
-	delay(100);
-	Serial1.begin(9600);
-//	Serial1.begin(38400);
+			delay(500);
+			Serial1.end();
+			delay(500);
+			Serial1.begin(38400);
 #endif
 }
 
@@ -68,11 +115,16 @@ void PollGps(uint32_t now)
 			SDCardLogMessage(linebuffer);
 
 			if(verbose>0)
+			{
 				Serial.print(linebuffer);
+			}
 			
 #if 0
-			if(strncmp(linebuffer,"$GPGGA",6)==0)
+			if(		(strncmp(linebuffer,"$GPGGA",6)==0)
+				||	(strncmp(linebuffer,"$GNGGA",6)==0)	)
+			{
 				Serial.print(linebuffer);
+			}
 #endif
 			
 			if(		SyncTimeToGPS

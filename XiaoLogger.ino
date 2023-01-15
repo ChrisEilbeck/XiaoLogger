@@ -31,7 +31,7 @@ bool normaloperation=true;
 
 // controls the amount of logging that goes to the serial console
 
-int verbose=0;
+int verbose=1;
 
 // sensors
 
@@ -108,7 +108,7 @@ void SetupSerial(void)
 {
 	Serial.begin(115200);
 	
-#if 1
+#if 0
 	// wait for serial connection from the host
 	// do not use this apart from when debugging
 
@@ -262,7 +262,7 @@ void PrintDirectory(File dir,int numTabs)
 			break;
 		}
 		
-		for (uint8_t i = 0; i < numTabs; i++)
+		for(uint8_t i=0;i<numTabs;i++)
 		{
 			Serial.print('\t');
 		}
@@ -278,7 +278,7 @@ void PrintDirectory(File dir,int numTabs)
 		{
 			// files have sizes, directories do not
 			Serial.print("\t\t");
-			Serial.println(entry.size(), DEC);
+			Serial.println(entry.size(),DEC);
 		}
 		
 		entry.close();

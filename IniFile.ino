@@ -107,7 +107,7 @@ void ReadIniFile(void)
 	// Check the file is valid.  This can be used to warn if any lines are
 	// longer than the buffer.
 	
-	const size_t bufferLen=80;
+	const size_t bufferLen=1024;
 	char buffer[bufferLen];
 
 	if(!ini.validate(buffer, bufferLen))
@@ -177,9 +177,9 @@ void WriteIniFile(void)
 		opf.println("SyncTimeToGPS=1");
 		opf.println("SetHighBaudRate=1");
 		opf.println("SetHighFixRate=1");
-		opf.println("HighBaudRateCommand=00000000");
-		opf.println("HighFixRateCommand=11111111");
-		opf.println("KinematicsFilterCommand=22222222");
+		opf.println("HighBaudRateCommand=B5620600140001000000D008000000C201002300030000000000DC5E");
+		opf.println("HighFixRateCommand=B562060806006400010001007A12");
+		opf.println("KinematicsFilterCommand=B56206242400FFFF080300000000102700000500FA00FA0064002C0100000000102700000000000000004F1F");
 		opf.println("");
 		opf.println("[Accelerometer]");
 		opf.println("Type=ADXL345");
