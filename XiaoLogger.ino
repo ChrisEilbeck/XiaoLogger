@@ -205,6 +205,7 @@ void PollSerial(uint32_t now)
 
 void setup(void) 
 {
+#if 0
 	SetupSerial();
 	SetupSDCard();
 
@@ -216,18 +217,24 @@ void setup(void)
 	SetupAccelerometer();
 	SetupPressureSensor();
 	SetupGps();
+#else
+	SetupSerial();
+	SetupOLEDDisplay();
+	SetupGps();
+#endif
 }
 
 void loop(void) 
 {
 	uint32_t now=millis();
 	
+#if 0
 	// poll the sensors.  these are higher priority than the other attached
 	// devices so having them measured with the minimal delay from the
 	// timestamp value is a good thing
 	PollAccelerometer(now);
 	PollPressureSensor(now);
-
+#endif
 #if 0
 	// this is probably redundant
 	PollSDCard(now);
@@ -236,8 +243,10 @@ void loop(void)
 	// this is not fitted in the current version of the hardware
 	PollBeeper(now);
 #endif
-
+#if 0
 	PollButtons(now);
+#endif
+	
 	PollOLEDDisplay(now);
 	
 	// respond to data received from the GPS
@@ -246,8 +255,10 @@ void loop(void)
 	// respond to commands over the serial console link
 	PollSerial(now);
 	
+#if 0
 	// respond to events generated using the buttons
 	PollCommandInterface(now);	
+#endif
 }
 
 void PrintDirectory(File dir,int numTabs)

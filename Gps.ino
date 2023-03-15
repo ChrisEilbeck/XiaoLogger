@@ -1,4 +1,29 @@
 
+//
+// change fix rate to 10Hz		-	B562060806006400010001007A12 
+//
+// change baud rate to 115K2	-	B5620600140001000000D008000000C201002300030000000000DC5E
+//
+// change to airborne<4g motion	-	B56206242400FFFF080300000000102700000500FA00FA0064002C0100000000102700000000000000004F1F
+//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #include <TimeLib.h>
 
 #include "Gps.h"
@@ -43,7 +68,9 @@ void SendHexMessage(char *hexmsg)
 
 void SetupGps(void)
 {
-	Serial1.begin(InitialBaudRate);
+//	Serial1.begin(InitialBaudRate);
+
+	Serial1.begin(38400);
 
 #if 0	
 	if(strncmp(GPSType,"Neo8m",5)==0)
@@ -80,7 +107,7 @@ void PollGps(uint32_t now)
 {
 //	Serial.print("\x1b[2J");
 
-#if 0
+#if 1
 	while(Serial1.available())
 	{
 		char rxbyte=Serial1.read();
