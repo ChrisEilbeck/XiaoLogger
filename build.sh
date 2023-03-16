@@ -1,6 +1,6 @@
 #!/bin/bash
 
-~/bin/arduino-cli compile \
-	--verbose \
-	--fqbn Seeeduino:samd:seeed_XIAO_m0 \
-	XiaoLogger.ino 
+BOARD=arduino:mbed_rp2040:pico
+PORT=/dev/ttyACM0
+
+arduino-cli compile --upload --verbose --fqbn ${BOARD} --port ${PORT} XiaoLogger.ino
