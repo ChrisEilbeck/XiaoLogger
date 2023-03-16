@@ -70,7 +70,15 @@ void SetupGps(void)
 {
 //	Serial1.begin(InitialBaudRate);
 
-	Serial1.begin(38400);
+//	Serial1.begin(38400);
+	Serial1.begin(9600);
+
+	SendHexMessage("B5620600140001000000D008000000C201002300030000000000DC5E");
+	
+	delay(250);
+	Serial1.end();
+	delay(250);
+	Serial1.begin(115200);
 
 #if 0	
 	if(strncmp(GPSType,"Neo8m",5)==0)

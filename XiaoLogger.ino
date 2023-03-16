@@ -203,6 +203,9 @@ void PollSerial(uint32_t now)
 	}
 }
 
+int interruptPin=26;
+volatile byte state=LOW;
+
 void setup(void) 
 {
 #if 0
@@ -222,12 +225,60 @@ void setup(void)
 	SetupOLEDDisplay();
 	SetupGps();
 #endif
+
+	pinMode(17,OUTPUT);		pinMode(16,OUTPUT);		pinMode(25,OUTPUT);
+	digitalWrite(17,HIGH);	digitalWrite(16,HIGH);	digitalWrite(25,HIGH);
+
+#if 0
+	pinMode(26,INPUT_PULLDOWN);
+#else
+	pinMode(interruptPin,INPUT_PULLDOWN);
+//	attachInterrupt(digitalPinToInterrupt(interruptPin),blink,RISING);
+	attachInterrupt(interruptPin,blink,RISING);
+#endif
 }
+
+long int ticktime;
+int tick=0;
 
 void loop(void) 
 {
 	uint32_t now=millis();
-	
+
+//	PollGps(now);
+
+	if(tick)
+	{
+		digitalWrite(25,state);
+		Serial.println(ticktime);
+		tick=0;
+	}
+
+#if 0
+	Serial.print("Ping!\r\n");
+	delay(500);
+#endif
+#if 0
+	while(1)
+	{
+		int val=digitalRead(26);
+		digitalWrite(25,!val);
+	}
+#endif
+#if 0
+	digitalWrite(17,LOW);	digitalWrite(16,HIGH);	digitalWrite(25,HIGH);
+	delay(250);
+	digitalWrite(17,HIGH);	digitalWrite(16,HIGH);	digitalWrite(25,HIGH);
+	delay(250);
+	digitalWrite(17,HIGH);	digitalWrite(16,LOW);	digitalWrite(25,HIGH);
+	delay(250);
+	digitalWrite(17,HIGH);	digitalWrite(16,HIGH);	digitalWrite(25,HIGH);
+	delay(250);
+	digitalWrite(17,HIGH);	digitalWrite(16,HIGH);	digitalWrite(25,LOW);
+	delay(250);
+	digitalWrite(17,HIGH);	digitalWrite(16,HIGH);	digitalWrite(25,HIGH);
+	delay(250);
+#endif
 #if 0
 	// poll the sensors.  these are higher priority than the other attached
 	// devices so having them measured with the minimal delay from the
@@ -246,7 +297,7 @@ void loop(void)
 #if 0
 	PollButtons(now);
 #endif
-	
+#if 0	
 	PollOLEDDisplay(now);
 	
 	// respond to data received from the GPS
@@ -254,12 +305,20 @@ void loop(void)
 	
 	// respond to commands over the serial console link
 	PollSerial(now);
-	
+#endif
 #if 0
 	// respond to events generated using the buttons
 	PollCommandInterface(now);	
 #endif
 }
+
+void blink()
+{
+	state=!state;
+	ticktime=micros();
+	tick=1;
+}
+
 
 void PrintDirectory(File dir,int numTabs)
 {
